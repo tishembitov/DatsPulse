@@ -2,12 +2,12 @@ plugins {
     id 'java'
 }
 
-group 'org.example'
+group 'ru.tishembitov'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = '11'
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
