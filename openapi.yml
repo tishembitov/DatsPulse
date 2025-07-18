@@ -1,0 +1,360 @@
+openapi: 3.0.1
+info:
+  title: AntProtocol API
+  description: AntProtocol API
+  contact: {}
+  version: "1.0"
+servers:
+  - url: https://games-test.datsteam.dev
+    description: Test server
+  - url: https://games.datsteam.dev
+    description: Production server
+paths:
+  /api/arena:
+    get:
+      tags:
+      - player
+      summary: Ants, enemies and map response
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.PlayerResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/gamesdk.PublicError'
+      security:
+      - ApiKeyAuth: []
+  /api/logs:
+    get:
+      tags:
+      - player
+      summary: Player logs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/player.LogMessage'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/gamesdk.PublicError'
+      security:
+      - ApiKeyAuth: []
+  /api/move:
+    post:
+      tags:
+      - player
+      summary: Ant orders and map response
+      requestBody:
+        description: ant moves
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.PlayerMoveCommands'
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.PlayerResponseWithErrors'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/gamesdk.PublicError'
+      security:
+      - ApiKeyAuth: []
+      x-codegen-request-body-name: request
+  /api/register:
+    post:
+      tags:
+      - player
+      summary: Player game registration
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.PlayerRegistration'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/gamesdk.PublicError'
+      security:
+      - ApiKeyAuth: []
+components:
+  schemas:
+    dto.Ant:
+      type: object
+      properties:
+        food:
+          $ref: '#/components/schemas/dto.Food'
+        health:
+          type: integer
+          example: 100
+        id:
+          type: string
+          example: 11111111-2222-3333-4444-555555555555
+        lastAttack:
+          $ref: '#/components/schemas/hex.Hex'
+        lastEnemyAnt:
+          type: string
+        lastMove:
+          type: array
+          items:
+            $ref: '#/components/schemas/hex.Hex'
+        move:
+          type: array
+          items:
+            $ref: '#/components/schemas/hex.Hex'
+        q:
+          type: integer
+          example: 10
+        r:
+          type: integer
+          example: 20
+        type:
+          type: integer
+          example: 0
+    dto.Food:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: Amount of food available at this location
+          example: 0
+        type:
+          type: integer
+          description: "Food type (1: apple, 2: bread, 3: nectar)"
+          example: 0
+    dto.FoodOnMap:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: Amount of food available at this location
+          example: 0
+        q:
+          type: integer
+          example: 10
+        r:
+          type: integer
+          example: 20
+        type:
+          type: integer
+          description: "Food type (1: apple, 2: bread, 3: nectar)"
+          example: 0
+    dto.PlayerEnemy:
+      type: object
+      properties:
+        attack:
+          type: integer
+          description: Attack power of the ant
+          example: 0
+        food:
+          type: object
+          description: Amount of food the ant is carrying
+          allOf:
+          - $ref: '#/components/schemas/dto.Food'
+        health:
+          type: integer
+          description: Health points of the ant
+          example: 0
+        q:
+          type: integer
+          example: 10
+        r:
+          type: integer
+          example: 20
+        type:
+          type: integer
+          description: "Type of the ant (1:Worker, 2:Soldier, 3:Scout)"
+          example: 1
+    dto.PlayerRegistration:
+      type: object
+      properties:
+        lobbyEndsIn:
+          type: integer
+          description: Time until the lobby ends in seconds (can be negative)
+        name:
+          type: string
+          description: Player name
+        nextTurn:
+          type: number
+          description: Time until the next turn in seconds
+          example: 0.0
+        realm:
+          type: string
+          description: Current round name
+          example: antprotocol-test
+    dto.PlayerResponse:
+      type: object
+      properties:
+        ants:
+          type: array
+          items:
+            $ref: '#/components/schemas/dto.Ant'
+        enemies:
+          type: array
+          items:
+            $ref: '#/components/schemas/dto.PlayerEnemy'
+        food:
+          type: array
+          description: Food on the map
+          items:
+            $ref: '#/components/schemas/dto.FoodOnMap'
+        home:
+          type: array
+          description: "Home hexes of the player, where they can store food"
+          items:
+            $ref: '#/components/schemas/hex.Hex'
+        map:
+          type: array
+          description: Map tiles
+          items:
+            $ref: '#/components/schemas/dto.Tile'
+        nextTurnIn:
+          type: number
+          description: Time until the next turn in seconds
+          example: 0.0
+        score:
+          type: integer
+          description: Player's total calories (nectar)
+          example: 0
+        spot:
+          type: object
+          description: Player's current position on the map
+          allOf:
+          - $ref: '#/components/schemas/hex.Hex'
+        turnNo:
+          type: integer
+          description: Current turn number
+          example: 0
+    dto.PlayerResponseWithErrors:
+      type: object
+      properties:
+        ants:
+          type: array
+          items:
+            $ref: '#/components/schemas/dto.Ant'
+        enemies:
+          type: array
+          items:
+            $ref: '#/components/schemas/dto.PlayerEnemy'
+        errors:
+          type: array
+          items:
+            type: string
+        food:
+          type: array
+          description: Food on the map
+          items:
+            $ref: '#/components/schemas/dto.FoodOnMap'
+        home:
+          type: array
+          description: "Home hexes of the player, where they can store food"
+          items:
+            $ref: '#/components/schemas/hex.Hex'
+        map:
+          type: array
+          description: Map tiles
+          items:
+            $ref: '#/components/schemas/dto.Tile'
+        nextTurnIn:
+          type: number
+          description: Time until the next turn in seconds
+          example: 0.0
+        score:
+          type: integer
+          description: Player's total calories (nectar)
+          example: 0
+        spot:
+          type: object
+          description: Player's current position on the map
+          allOf:
+          - $ref: '#/components/schemas/hex.Hex'
+        turnNo:
+          type: integer
+          description: Current turn number
+          example: 0
+    dto.Tile:
+      type: object
+      properties:
+        cost:
+          type: integer
+          description: Cost to move through this tile
+          example: 1
+        q:
+          type: integer
+          example: 10
+        r:
+          type: integer
+          example: 20
+        type:
+          type: integer
+          description: "Type of tile (1: ant spot, 2: plain, 3: dirt, 4: acid, 5:\
+            \ rock)"
+          example: 0
+    gamesdk.PublicError:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    hex.Hex:
+      type: object
+      properties:
+        q:
+          type: integer
+          example: 10
+        r:
+          type: integer
+          example: 20
+    model.AntMoveCommand:
+      type: object
+      properties:
+        ant:
+          type: string
+          example: 11111111-2222-3333-4444-555555555555
+        path:
+          type: array
+          items:
+            $ref: '#/components/schemas/hex.Hex'
+    model.PlayerMoveCommands:
+      type: object
+      properties:
+        moves:
+          type: array
+          items:
+            $ref: '#/components/schemas/model.AntMoveCommand'
+    player.LogMessage:
+      type: object
+      properties:
+        message:
+          type: string
+        time:
+          type: string
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-Auth-Token
+      in: header
